@@ -102,4 +102,76 @@ pip install diffusers transformers accelerate torch torchvision imageio[ffmpeg]
 🖥️ Requirements
 GPU is required (e.g., NVIDIA with at least 12 GB VRAM).
 Python 3.8+
+📝 An input text box for the prompt
+🎥 An output area for the generated video
+🔠 A dropdown to select font style for display
+✅ Install Streamlit First:
+pip install streamlit
+📄 app.py — Streamlit Web App
+import streamlit as st
+import torch
+from diffusers import DiffusionPipeline
+from diffusers.utils import export_to_video
+import os
+
+# Set up page config
+st.set_page_config(page_title="Text-to-Video Generator", layout="centered")
+
+# Font options
+font_options = ["Arial", "Courier New", "Georgia", "Verdana", "Times New Roman"]
+font_choice = st.selectbox("Choose a font style", font_options)
+
+# Apply custom font using Streamlit HTML
+st.markdown(
+    f"""
+    <style>
+    html, body, [class*="css"] {{
+        font-family: '{font_choice}', sans-serif;
+    }}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
+# Title
+st.title("🎬 Text-to-Video Generator")
+
+# Input box for prompt
+prompt = st.text_input("Enter your video prompt", value="A robot walking in the forest")
+
+# Button to generate
+if st.button("Generate Video"):
+    with st.spinner("Generating video... Please wait ⏳"):
+        # Load the pipeline (runs only once)
+        @st.cache_resource
+        def load_pipeline():
+            pipe = DiffusionPipeline.from_pretrained(
+                "damo-vilab/text-to-video-ms-1.7b", 
+                torch_dtype=torch.float16, 
+                variant="fp16"
+            )
+            return pipe.to("cuda")
+
+        pipe = load_pipeline()
+
+        # Generate video
+        output = pipe(prompt, num_inference_steps=25)
+        video_frames = output.frames[0]
+        video_path = export_to_video(video_frames)
+
+        # Display video
+        st.success("✅ Video generated successfully!")
+        st.video(video_path)
+
+# Optional footer
+st.markdown("---")
+st.caption("Built with ❤️ using Hugging Face Diffusers and Streamlit")
+🔧 Run the App
+In your terminal:
+
+streamlit run app.py
+💡 Features
+Font selection applies to all text dynamically.
+Input prompt → Hugging Face model → output video displayed.
+Easy to customize with new fonts, styling, and model settings.
 
