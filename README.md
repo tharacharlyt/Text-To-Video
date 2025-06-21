@@ -68,3 +68,38 @@ if __name__ == "__main__":
 
     # Generate video
     generator.generate_video(prompt=prompt, num_frames=24, steps=30)
+
+    import torch
+from diffusers import DiffusionPipeline
+from diffusers.utils import export_to_video
+
+# Load the model from Hugging Face
+pipe = DiffusionPipeline.from_pretrained(
+    "damo-vilab/text-to-video-ms-1.7b", 
+    torch_dtype=torch.float16, 
+    variant="fp16"
+)
+
+# Move to GPU
+pipe = pipe.to("cuda")
+
+# Define a simple prompt
+prompt = "A cute dog running in the park"
+
+# Generate video frames from the prompt
+output = pipe(prompt)
+video_frames = output.frames[0]
+
+# Export the frames to a video file
+video_path = export_to_video(video_frames)
+
+# Print the path to the generated video
+print(f"Video saved at: {video_path}")
+Install Required Packages
+Before running this code, install dependencies using:
+
+pip install diffusers transformers accelerate torch torchvision imageio[ffmpeg]
+🖥️ Requirements
+GPU is required (e.g., NVIDIA with at least 12 GB VRAM).
+Python 3.8+
+
